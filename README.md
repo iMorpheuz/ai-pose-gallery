@@ -1,5 +1,7 @@
 # AI Pose Reference Gallery
 
+**Live demo:** https://imorpheuz.github.io/ai-pose-gallery/
+
 A clean, English-language web gallery for browsing **1,439 AI pose reference images** (288 unique poses with multiple angles).
 
 These are faceless gray mannequin line drawings designed as reference for AI image generation (Stable Diffusion, Flux, Midjourney, etc.). Simply use the pose image as a reference and prompt “change to this pose” or use it with ControlNet / IP-Adapter.
@@ -29,7 +31,6 @@ The images are loaded from the public community mirror on GitHub so the site wor
 ## Files
 
 - `index.html` — the gallery app
-- `poses-en.json` — English metadata for all 1,439 entries
 
 ## License Note
 
