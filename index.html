@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Pose Reference Gallery</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .pose-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .pose-card:hover { transform: translateY(-4px); }
+    #lightbox { backdrop-filter: blur(8px); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-20 backdrop-blur">
+    <div class="max-w-7xl mx-auto px-4 py-5">
+      <h1 class="text-2xl md:text-3xl font-bold tracking-tight">AI Pose Reference Gallery</h1>
+      <p class="text-slate-400 mt-1 text-sm md:text-base">1,439 faceless mannequin pose references · Free for personal & commercial use</p>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Filters -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <select id="filterSystem" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+        <option value="">All Systems</option>
+      </select>
+      <select id="filterClass" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+        <option value="">All Classifications</option>
+      </select>
+      <select id="filterAngle" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+        <option value="">All Angles</option>
+      </select>
+      <input id="search" type="search" placeholder="Search pose name..." class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+    </div>
+
+    <div id="stats" class="text-sm text-slate-400 mb-4"></div>
+
+    <!-- Gallery -->
+    <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+
+    <div id="loading" class="text-center py-20 text-slate-400">Loading poses...</div>
+    <div id="empty" class="hidden text-center py-20 text-slate-500">No poses match your filters.</div>
+  </main>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="closeLightbox(event)">
+    <div class="bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto shadow-2xl" onclick="event.stopPropagation()">
+      <div class="p-4 border-b border-slate-800 flex justify-between items-start">
+        <div>
+          <h2 id="lbTitle" class="font-semibold text-lg"></h2>
+          <p id="lbMeta" class="text-sm text-slate-400 mt-1"></p>
+        </div>
+        <button onclick="closeLightbox()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <div class="p-4 flex justify-center bg-slate-950">
+        <img id="lbImage" class="max-h-[65vh] max-w-full object-contain" alt="Pose">
+      </div>
+      <div class="p-4 border-t border-slate-800 flex justify-between text-sm">
+        <a id="lbDownload" href="#" download class="text-sky-400 hover:underline">Download full PNG</a>
+        <span id="lbId" class="text-slate-500 font-mono text-xs"></span>
+      </div>
+    </div>
+  </div>
+
+  <footer class="border-t border-slate-800 mt-12 py-6 text-center text-xs text-slate-500">
+    Based on the free pose database by <a href="https://x.com/giaaibusi" class="underline hover:text-slate-300" target="_blank">@giaaibusi</a> · 
+    Images hosted via community mirror · 
+    Original free for commercial & secondary use
+  </footer>
+
+  <script>
+    let allPoses = [];
+    let filtered = [];
+
+    async function init() {
+      const res = await fetch('./poses-en.json');
+      allPoses = await res.json();
+      populateFilters();
+      applyFilters();
+      document.getElementById('loading').classList.add('hidden');
+    }
+
+    function populateFilters() {
+      const systems = [...new Set(allPoses.map(p => p.system))].sort();
+      const classes = [...new Set(allPoses.map(p => p.classification))].sort();
+      const angles = [...new Set(allPoses.map(p => p.angle))].sort();
+
+      const sysSel = document.getElementById('filterSystem');
+      systems.forEach(s => sysSel.add(new Option(s, s)));
+
+      const clsSel = document.getElementById('filterClass');
+      classes.forEach(c => clsSel.add(new Option(c, c)));
+
+      const angSel = document.getElementById('filterAngle');
+      angles.forEach(a => angSel.add(new Option(a, a)));
+    }
+
+    function applyFilters() {
+      const system = document.getElementById('filterSystem').value;
+      const cls = document.getElementById('filterClass').value;
+      const angle = document.getElementById('filterAngle').value;
+      const q = document.getElementById('search').value.toLowerCase().trim();
+
+      filtered = allPoses.filter(p => {
+        if (system && p.system !== system) return false;
+        if (cls && p.classification !== cls) return false;
+        if (angle && p.angle !== angle) return false;
+        if (q && !p.pose_name.toLowerCase().includes(q) && !p.pose_name_jp.toLowerCase().includes(q) && !p.id.toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      renderGallery();
+      document.getElementById('stats').textContent = `Showing ${filtered.length} of ${allPoses.length} poses`;
+    }
+
+    function renderGallery() {
+      const gallery = document.getElementById('gallery');
+      const empty = document.getElementById('empty');
+      gallery.innerHTML = '';
+
+      if (filtered.length === 0) {
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
+      filtered.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'pose-card bg-slate-900 rounded-xl overflow-hidden border border-slate-800 cursor-pointer group';
+        card.onclick = () => openLightbox(p);
+        card.innerHTML = `
+          <div class="aspect-[3/4] bg-slate-950 flex items-center justify-center overflow-hidden">
+            <img src="${p.thumbnail}" alt="" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+          </div>
+          <div class="p-2.5">
+            <div class="text-xs font-medium truncate" title="${p.pose_name}">${p.pose_name}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">${p.angle} · ${p.classification}</div>
+          </div>
+        `;
+        gallery.appendChild(card);
+      });
+    }
+
+    function openLightbox(p) {
+      document.getElementById('lbTitle').textContent = p.pose_name;
+      document.getElementById('lbMeta').textContent = `${p.system} · ${p.classification} · ${p.angle}`;
+      document.getElementById('lbImage').src = p.fullsize;
+      document.getElementById('lbDownload').href = p.fullsize;
+      document.getElementById('lbId').textContent = p.id;
+      document.getElementById('lightbox').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox(e) {
+      if (e && e.target !== document.getElementById('lightbox') && e.target.tagName !== 'BUTTON') return;
+      document.getElementById('lightbox').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('filterSystem').onchange = applyFilters;
+    document.getElementById('filterClass').onchange = applyFilters;
+    document.getElementById('filterAngle').onchange = applyFilters;
+    document.getElementById('search').oninput = applyFilters;
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+    init();
+  </script>
+</body>
+</html>
