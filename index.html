@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
+<script>document.documentElement.dataset.theme=localStorage.theme||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")</script>
 <title>AI Pose Reference Gallery | 288 poses · 1,439 multi-angle references</title>
 <meta name="description" content="288 human poses and 1,439 multi-angle 900×1200 reference images covering full body, upper body and couple poses. Filter by series, category and camera angle, compare angles and download the originals for AI art, composition and posing reference.">
 <meta name="robots" content="index, follow, max-image-preview:large">
@@ -301,6 +302,22 @@ main{padding:22px 0 54px}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}
 }
+html[data-theme="dark"]{color-scheme:dark;
+  --bg:#0f1117;--surface:#171a22;--surface-2:#1d212b;--text:#e8eaf0;--text-2:#a3a9b6;
+  --text-3:#737b8a;--line:#272c37;--line-strong:#343a47;--accent:#8b8bf0;
+  --accent-dark:#a9a9ff;--accent-soft:#23243d;--success:#4cc38a;--shadow:0 14px 40px rgba(0,0,0,.45)}
+html[data-theme="dark"] .topbar{border-bottom-color:var(--line)}
+html[data-theme="dark"] .controls{background:rgba(15,17,23,.9)}
+html[data-theme="dark"] .line-tab[aria-selected="true"]{color:var(--bg)}
+html[data-theme="dark"] .segmented{background:var(--bg)}
+html[data-theme="dark"] .filter-chip{border-color:#34365a}
+html[data-theme="dark"] .pose-card:hover,html[data-theme="dark"] .pose-card:focus-visible{border-color:var(--line-strong)}
+html[data-theme="dark"] .angle-tag,html[data-theme="dark"] .zoom-hint,html[data-theme="dark"] .viewer-close,html[data-theme="dark"] .viewer-nav{background:rgba(23,26,34,.9);border-color:var(--line-strong);color:var(--text)}
+html[data-theme="dark"] .viewer-close:hover,html[data-theme="dark"] .viewer-nav:hover{background:var(--surface-2)}
+html[data-theme="dark"] .skeleton .card-image,html[data-theme="dark"] .skeleton-line{background-image:linear-gradient(90deg,#1d212b 25%,#262b36 50%,#1d212b 75%)}
+html[data-theme="dark"] .viewer-stage{background:#0b0d12}
+html[data-theme="dark"] .info-head{background:rgba(23,26,34,.96)}
+html[data-theme="dark"] .info-note{background:#2a2414;color:#e6c27a}
 </style>
 </head>
 <body>
@@ -311,6 +328,7 @@ main{padding:22px 0 54px}
       <span class="brand-copy"><strong>POSE Atlas</strong><span>Reference Library</span></span>
     </a>
     <nav class="top-actions" aria-label="Help and sources">
+      <button class="action-btn" type="button" id="themeToggle" aria-label="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg><span class="action-text">Theme</span></button>
       <button class="action-btn" type="button" data-info="guide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.4 2.4 0 0 1 4.6 1c0 1.8-2.3 2-2.3 3.6M12 17h.01"/></svg><span class="action-text">How to use</span></button>
       <button class="action-btn" type="button" data-info="notice"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5m0 3h.01"/></svg><span class="action-text">Terms of use</span></button>
       <a class="action-btn author" href="https://github.com/iMorpheuz/ai-pose-gallery" target="_blank" rel="noopener noreferrer" aria-label="View the GitHub repository"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .8a11.3 11.3 0 0 0-3.6 22c.6.1.8-.2.8-.5v-2.2c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5A11.3 11.3 0 0 0 12 .8Z"/></svg><span class="action-text">GitHub</span></a>
@@ -857,6 +875,11 @@ document.querySelectorAll('[data-info]').forEach(button => {
 });
 $('#infoClose').addEventListener('click', () => $('#infoDialog').close());
 $('#infoDialog').addEventListener('click', event => { if (event.target === $('#infoDialog')) $('#infoDialog').close(); });
+
+$('#themeToggle').addEventListener('click', () => {
+  const root = document.documentElement;
+  root.dataset.theme = localStorage.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+});
 
 fetch('data/pose-en.json')
   .then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); })
