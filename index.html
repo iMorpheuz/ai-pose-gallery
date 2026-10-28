@@ -20,7 +20,6 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 py-6">
-    <!-- Filters -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
       <select id="filterSystem" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
         <option value="">All Systems</option>
@@ -35,15 +34,11 @@
     </div>
 
     <div id="stats" class="text-sm text-slate-400 mb-4"></div>
-
-    <!-- Gallery -->
     <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
-
     <div id="loading" class="text-center py-20 text-slate-400">Loading poses...</div>
     <div id="empty" class="hidden text-center py-20 text-slate-500">No poses match your filters.</div>
   </main>
 
-  <!-- Lightbox -->
   <div id="lightbox" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="closeLightbox(event)">
     <div class="bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto shadow-2xl" onclick="event.stopPropagation()">
       <div class="p-4 border-b border-slate-800 flex justify-between items-start">
@@ -70,14 +65,71 @@
   </footer>
 
   <script>
+    const systemMap = {
+      "全身1人・セクシー系": "Full Body - Sexy",
+      "全身1人・標準系": "Full Body - Standard",
+      "上半身1人": "Upper Body",
+      "2人絡み": "Couple Poses"
+    };
+    const angleMap = {
+      "正面": "Front",
+      "上から": "High Angle",
+      "下から": "Low Angle",
+      "横": "Side",
+      "斜め": "Diagonal"
+    };
+    const classMap = {
+      "立ち": "Standing",
+      "座り": "Sitting",
+      "膝立ち・四つん這い": "Kneeling / On All Fours",
+      "寝そべり": "Lying Down",
+      "特殊": "Special",
+      "横座り・女の子座り": "Side Sitting / Girl Sitting",
+      "しゃがみ": "Squatting",
+      "前かがみ": "Bending Forward",
+      "のけぞり・反り": "Arching Back",
+      "ひねり": "Twisting",
+      "かわいい系": "Cute",
+      "胸寄せ・谷間強調系": "Chest Emphasis",
+      "セクシー・露骨寄り系": "Sexy / Explicit",
+      "立位": "Standing",
+      "顔寄せ系": "Face Close",
+      "正常位": "Missionary",
+      "後背位": "Doggy Style",
+      "座位": "Sitting",
+      "背面座位": "Reverse Sitting",
+      "騎乗位": "Cowgirl",
+      "側位": "Side Position",
+      "対面座位": "Face-to-Face Sitting",
+      "立位密着": "Standing Close",
+      "座位密着": "Sitting Close",
+      "密着": "Close Contact"
+    };
+
     let allPoses = [];
     let filtered = [];
 
     async function init() {
-      const res = await fetch('./poses-en.json');
-      allPoses = await res.json();
-      populateFilters();
-      applyFilters();
+      try {
+        const res = await fetch('https://raw.githubusercontent.com/anhao/ai-pose-gallery-zh/main/data/pose.json');
+        const raw = await res.json();
+        allPoses = raw.map(item => ({
+          id: item.id,
+          system: systemMap[item["系統"]] || item["系統"],
+          pose_number: item["ポーズ番号"],
+          classification: classMap[item["分類"]] || item["分類"],
+          pose_name: item["ポーズ名"],
+          pose_name_jp: item["ポーズ名"],
+          angle: angleMap[item["アングル"]] || item["アングル"],
+          thumbnail: 'https://raw.githubusercontent.com/anhao/ai-pose-gallery-zh/main/' + item["サムネ"],
+          fullsize: 'https://raw.githubusercontent.com/anhao/ai-pose-gallery-zh/main/' + item["原寸"]
+        }));
+        populateFilters();
+        applyFilters();
+      } catch (e) {
+        console.error(e);
+        document.getElementById('loading').textContent = 'Failed to load pose data. Check console.';
+      }
       document.getElementById('loading').classList.add('hidden');
     }
 
